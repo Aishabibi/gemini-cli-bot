@@ -20,18 +20,29 @@ while True:
         print("Пока!")
         break
 
+    if not user_input.strip():
+        print("Бот: Кажется, вы ничего не написали — попробуйте ещё раз.\n")
+        continue
+
     if PROVIDER == "gemini":
         history.append({"role": "user", "parts": [{"text": user_input}]})
         history = history[-10:]
 
-        response = client.models.generate_content(
-            model="gemini-flash-latest",
-            contents=history,
-            config={"system_instruction": SYSTEM_PROMPT}
-        )
-        answer = response.text
+        try:
+            response = client.models.generate_content(
+                model="gemini-flash-latest",
+                contents=history,
+                config={"system_instruction": SYSTEM_PROMPT}
+            )
+            answer = response.text
+        except Exception as e:
+            print(f"Бот: Ой, сервер сейчас недоступен или перегружен. Попробуйте через минуту.\n(Техническая причина: {e})\n")
+            history.pop()  # убираем последнее сообщение, раз ответа не было
+            continue
+
         history.append({"role": "model", "parts": [{"text": answer}]})
 
+  
     elif PROVIDER == "ollama":
         history.append({"role": "user", "content": user_input})
         history = history[-10:]
